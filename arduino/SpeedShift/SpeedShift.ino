@@ -9,7 +9,9 @@
 #include <EEPROM.h>
 
 //Defines the segments A-G: SevenSeg(A, B, C, D, E, F, G);
-SevenSeg disp (10, 9, 8, 7, 6, 11, 12);
+//SevenSeg disp (10, 9, 8, 7, 6, 11, 12); // UNO
+SevenSeg disp (6, 5, A3, A1, A0, 8, 9); // Mini UNO
+
 //Number of 7 segments
 const int numOfDigits = 1;
 //CC(or CA) pins of segment
@@ -55,6 +57,12 @@ bool shiftUpLong;
 bool bothPressed;
 
 void setup() {
+
+  pinMode(A0, OUTPUT);
+  pinMode(A1, OUTPUT);
+  pinMode(A2, OUTPUT);
+  pinMode(A3, OUTPUT);
+  pinMode(A4, OUTPUT);
 
   Serial.begin(9600);
   //Defines the number of digits to be "numOfDigits" and the digit pins to be the elements of the array "digitPins"

@@ -1,1 +1,23 @@
+Boards to tryout:
+
+- Micro version with wifi
+https://www.banggood.com/3pcs-D1-Mini-V3_0_0-WIFI-Internet-Of-Things-Development-Board-Based-ESP8266-4MB-Geekcreit-for-Arduino-products-th
+
+- Mini version
+https://www.banggood.com/5Pcs-Pro-Mini-ATMEGA328P-Development-Board-Module-3_3V-8M-Interactive-Media-p-1193821.html?cur_warehouse=CN&rmmds=search
+
+
+Features to implement:
+
+- Save on power down
 https://www.codrey.com/arduino-projects/arduino-power-down-auto-save/
+
+- Calibrate without pc
+
+Future:
+support for front derailleur
+Wireless version
+Easy setup/calibration, without uploading new sketch
+User configs, upload your values for a particular derailleur
+Deraileur pushback on external forces
+front deraileur trimming of chain rubbing
