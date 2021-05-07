@@ -1164,7 +1164,7 @@ void SevenSeg::writeDigit(char digit){
     digitalWrite(_G, _segOn);
   }
 
-  if(digit=='\370'){ // ASCII code 248 or degree symbol: 'A°'
+  if(digit=='\370'){ // ASCII code 248 or degree symbol: 'Aï¿½'
     digitalWrite(_A, _segOn);
     digitalWrite(_B, _segOn);
     digitalWrite(_F, _segOn);
