@@ -17,6 +17,8 @@ An universal aproach to electronic shifting with off the shelf components.
 - Support for front deraileur
 - Update Schematics
 - More targets, smaller size Arduino, Node, ESP targets
+- Wireless, smartphone interface
+- Statistics and data logging?
 
 ## Requirements (currently)
 
