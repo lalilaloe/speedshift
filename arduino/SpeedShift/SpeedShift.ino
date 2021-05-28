@@ -8,15 +8,18 @@
 #include <Servo.h>
 #include <EEPROM.h>
 
-//Defines the segments A-G: SevenSeg(A, B, C, D, E, F, G);
-SevenSeg disp (10, 9, 8, 7, 6, 11, 12); // UNO
+//Defines the segments A-G: 
+//SevenSeg disp (A, B, C, D, E, F, G);
+//SevenSeg disp (10, 9, 8, 7, 6, 11, 12); // UNO
 //SevenSeg disp (6, 5, A3, A1, A0, 8, 9); // NANO
 //SevenSeg disp (4, 3, 7, 6, 5, 2, 1); // D1 Mini
+SevenSeg disp (5, 6, A0, A2, A3, 3, 4); // Pro-mini
 
 //Number of 7 segments
 const int numOfDigits = 1;
 //CC(or CA) pins of segment
-int digitPins [numOfDigits] = {4};
+//int digitPins [numOfDigits] = {4};
+int digitPins [numOfDigits] = {4}; // Pro-mini
 
 //Variables
 int flag;
@@ -65,18 +68,19 @@ long lastdisplay;
 
 void setup() {
 
-  // NANO
-  //pinMode(A0, OUTPUT); // D1 Mini, Only enable this pin
-  //  pinMode(A1, OUTPUT);
-  //  pinMode(A2, OUTPUT);
-  //  pinMode(A3, OUTPUT);
+  // NANO, Pro-mini
+  pinMode(A0, OUTPUT); // D1 Mini, Only enable this pin
+   pinMode(A1, OUTPUT);
+   pinMode(A2, OUTPUT);
+   pinMode(A3, OUTPUT);
   //  pinMode(A4, OUTPUT);
 
   Serial.begin(9600);
   //Defines the number of digits to be "numOfDigits" and the digit pins to be the elements of the array "digitPins"
   disp.setDigitPins ( numOfDigits , digitPins );
-  disp.setDPPin(5); // NANO, UNO
+  //disp.setDPPin(5); // NANO, UNO
   //disp.setDPPin(5); // D1 Mini
+  disp.setDPPin(A3); // Pro-mini
   //Only for common cathode 7segments
   disp.setCommonCathode();
   //Control brightness (values 0-100);
@@ -86,17 +90,17 @@ void setup() {
   shiftDownButton.begin();
   shiftUpButton.begin();
 
-  servo.attach(13);
-
+  //servo.attach(13);
+servo.attach(10); // Pro-mini
   // Read last saved position
   //if (EEPROM.read(0) != currentGear) {
   //  currentGear = EEPROM.read(0);
   //}
 
   //      Serial.println("Writing initial values");
-  //  for (int i = 0; i < gearCount + 1; i++) {
-  //    EEPROM.write(i, gearPositions[i -1]);
-  //  }
+//    for (int i = 0; i < gearCount + 1; i++) {
+//      EEPROM.write(i, gearPositions[i -1]);
+//    }
   currentGear = 1;
 
   gearPositions[0] = EEPROM.read(1);
