@@ -11,7 +11,11 @@
 void Button::begin()
 {
     pinMode(m_pin, m_puEnable ? INPUT_PULLUP : INPUT);
-    m_state = digitalRead(m_pin);
+    if(m_value){
+      m_state = inRange(analogRead(m_pin), m_value + 8, m_value - 8);
+    } else {
+      m_state = digitalRead(m_pin);
+    }
     if (m_invert) m_state = !m_state;
     m_time = millis();
     m_lastState = m_state;
@@ -26,7 +30,12 @@ void Button::begin()
 bool Button::read()
 {
     uint32_t ms = millis();
-    bool pinVal = digitalRead(m_pin);
+    bool pinVal;;
+    if(m_value){
+      pinVal = inRange(analogRead(m_pin), m_value - 8, m_value + 8);
+    } else {
+      pinVal = digitalRead(m_pin);
+    }
     if (m_invert) pinVal = !pinVal;
     if (ms - m_lastChange < m_dbTime)
     {
@@ -41,6 +50,11 @@ bool Button::read()
     }
     m_time = ms;
     return m_state;
+}
+
+bool Button::inRange(uint32_t val, uint32_t minimum, uint32_t maximum)
+{
+  return ((minimum <= val) && (val <= maximum));
 }
 
 /*----------------------------------------------------------------------*

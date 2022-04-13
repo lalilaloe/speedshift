@@ -1,273 +1,183 @@
-/* Arduino Tutorial - 7 Segment
-   One 7 segment is one digit, from 0 to  9.
-   Dev: Vasilakis Michalis // Date: 25/7/2015 // www.ardumotive.com */
-
-//Library
-#include "SevenSeg.h"
-#include "JC_Button.h"
+#include <Arduino.h>
+#include "AdvancedSevenSegment.h"
 #include <Servo.h>
-#include <EEPROM.h>
+#include "JC_Button.h"
+/*                                a   b   c   d   e  f   g  .*/
+AdvanceSevenSegment sevenSegment(D2, D1, D5, D6, D7, D3, D4, D0);
+Servo servo;
 
-//Defines the segments A-G: 
-//SevenSeg disp (A, B, C, D, E, F, G);
-//SevenSeg disp (10, 9, 8, 7, 6, 11, 12); // UNO
-//SevenSeg disp (6, 5, A3, A1, A0, 8, 9); // NANO
-//SevenSeg disp (4, 3, 7, 6, 5, 2, 1); // D1 Mini
-SevenSeg disp (5, 6, A0, A2, A3, 3, 4); // Pro-mini
-
-//Number of 7 segments
-const int numOfDigits = 1;
-//CC(or CA) pins of segment
-//int digitPins [numOfDigits] = {4};
-int digitPins [numOfDigits] = {4}; // Pro-mini
-
-//Variables
-int flag;
-int position;
-int configuratingGear;
-bool dot;
+const String hex = "123456789ABCDEF";
+const uint32_t gearCount = 12;
+int currentGear = 1;
+uint32_t configuratingGear;
+uint32_t position;
 const unsigned long
 SHORT_PRESS(250),
             LONG_PRESS(500);
 
-int gearPositions[] = {
-  10,
-  45,
-  55,
-  65,
-  75,
-  85,
-  95,
-  105,
-  115,
-  125,
-  135,
-  145,
-};
-
-const String hex = "0123456789ABCDEF";
-
-int gearCount = 12;
-
-int currentGear = 1;
-
-Servo servo;
-
-Button shiftDownButton(A3, 25, false, false);
-Button shiftUpButton(A4, 25, false, false);
-
+bool configShort;
 bool shiftDownShort;
 bool shiftUpShort;
+bool configLong;
 bool shiftDownLong;
 bool shiftUpLong;
-bool bothPressed;
 
-bool lastAction; // true = up, false = down
+uint8_t lastAction = 0; // 1 = up, -1 = down, 0 = default
 
-long lastdisplay;
+uint32_t lastdisplay;
+
+Button shiftDownButton(A0, 25, false, false, 536);
+Button shiftUpButton(A0, 25, false, false, 806);
+Button configButton(A0, 25, false, false, 1024);
+
+int gearPositions[] = {
+  10,
+  20,
+  30,
+  45,
+  60,
+  70,
+  85,
+  105,
+  120,
+  140,
+  165,
+  180,
+};
+
 
 void setup() {
+  sevenSegment.clean();
 
-  // NANO, Pro-mini
-  pinMode(A0, OUTPUT); // D1 Mini, Only enable this pin
-   pinMode(A1, OUTPUT);
-   pinMode(A2, OUTPUT);
-   pinMode(A3, OUTPUT);
-  //  pinMode(A4, OUTPUT);
-
-  Serial.begin(9600);
-  //Defines the number of digits to be "numOfDigits" and the digit pins to be the elements of the array "digitPins"
-  disp.setDigitPins ( numOfDigits , digitPins );
-  //disp.setDPPin(5); // NANO, UNO
-  //disp.setDPPin(5); // D1 Mini
-  disp.setDPPin(A3); // Pro-mini
-  //Only for common cathode 7segments
-  disp.setCommonCathode();
-  //Control brightness (values 0-100);
-  disp.setDutyCycle(50);
-  disp.writeDigit(' ');
-
+  servo.attach(D8);
+  //move(servo, 0);
+  servo.write(0);
   shiftDownButton.begin();
   shiftUpButton.begin();
-
-  //servo.attach(13);
-servo.attach(10); // Pro-mini
-  // Read last saved position
-  //if (EEPROM.read(0) != currentGear) {
-  //  currentGear = EEPROM.read(0);
-  //}
-
-  //      Serial.println("Writing initial values");
-//    for (int i = 0; i < gearCount + 1; i++) {
-//      EEPROM.write(i, gearPositions[i -1]);
-//    }
-  currentGear = 1;
-
-  gearPositions[0] = EEPROM.read(1);
-  gearPositions[1] = EEPROM.read(2);
-  gearPositions[2] = EEPROM.read(3);
-  gearPositions[3] = EEPROM.read(4);
-  gearPositions[4] = EEPROM.read(5);
-  gearPositions[5] = EEPROM.read(6);
-  gearPositions[6] = EEPROM.read(7);
-  gearPositions[7] = EEPROM.read(8);
-  gearPositions[8] = EEPROM.read(9);
-  gearPositions[9] = EEPROM.read(10);
-  gearPositions[10] = EEPROM.read(11);
-  gearPositions[11] = EEPROM.read(12);
-  Serial.println("Read all gear positions");
-  for (int i = 0; i < gearCount; i++) {
-    Serial.println(String(i + 1) + ": " + String(gearPositions[i]));
-  }
-
-  move(servo, 0);
-  configuratingGear = 0;
-
+  configButton.begin();
   lastdisplay = millis();
+  Serial.begin(9600);
 }
 
-void loop()
-{
-  //Check if incoming data is available:
-  if (Serial.available() > 0)
-  {
-    // If it is, we'll use parseInt() to pull out only numbers:
-    currentGear = Serial.parseInt();
-    flag = 0;
-  }
-
-
-  //Valid range is from 1 to 9
-  if (currentGear >= 1 && currentGear <= gearCount) {
-
-    if (configuratingGear == 0 && millis() > lastdisplay + 3500 ) {
-      disp.writeDigit(' ');
-      disp.clearDP();
-      dot = false;
-    } else {
-      if (dot)
-        disp.setDP();
-      //Print number to 7 segment display
-      disp.writeDigit(hex[currentGear]);
-    }
-
-    //Print message to serial monito only once
-    if (flag == 0) {
-      //Print number to serial monitor
-      //Serial.println(hex[currentGear]);
-      flag = 1;
-    }
-  }
-
+void loop() {
   shiftDownButton.read();
   shiftUpButton.read();
+  configButton.read();
 
-  if (!bothPressed && shiftUpButton.isPressed() && shiftDownButton.isPressed()) {
-    //Serial.println("BOTH PRESSED");
-    //Serial.println(currentGear);
-    bothPressed = true;
-    //EEPROM.update(0, currentGear);
-    dot = true;
+  delay(1); // Add Stability
+  
+  if (configButton.wasPressed()) {
+    //Serial.println("Config");
+    sevenSegment.setDot(1);
     if (configuratingGear != 0 ) {
-      EEPROM.update(configuratingGear, gearPositions[configuratingGear - 1]);
+      //EEPROM.update(configuratingGear, gearPositions[configuratingGear - 1]);
       Serial.println("Saving gear " + String(configuratingGear) + " to " + String(gearPositions[configuratingGear - 1]));
       configuratingGear = 0;
-      dot = false;
+      sevenSegment.setDot(0);
       lastdisplay = millis() - 3000;
     } else {
       // Correction for last registered up or downpress
-      if (lastAction) {
+      if (lastAction == 1) {
         if (currentGear > 1) currentGear = currentGear - 1;
-      } else {
+      } else if (lastAction == -1) {
         if (currentGear < gearCount) currentGear = currentGear + 1;
       }
       configuratingGear = currentGear;
       move(servo, 0);
       Serial.println("Start configurating " + String(configuratingGear));
     }
-  } else {
-    // Start shifting
-    if (shiftDownButton.wasPressed() && !shiftUpButton.isPressed() && !shiftUpButton.wasPressed()) {
-      //Serial.println("DOWN");
-      if (configuratingGear) {
-        gearPositions[configuratingGear - 1] = gearPositions[configuratingGear - 1] - 1;
-        Serial.println("Changed gear " + String(configuratingGear) + " position to: " + String(gearPositions[configuratingGear - 1]));
-        bothPressed = false;
-        move(servo, 0);
-      } else {
-        lastAction = false;
-        move(servo, -1);
-      }
-    }
-    if (shiftUpButton.wasPressed() && !shiftDownButton.isPressed() && !shiftDownButton.wasPressed()) {
-      //Serial.println("UP");
-      if (configuratingGear) {
-        gearPositions[configuratingGear - 1] = gearPositions[configuratingGear - 1] + 1;
-        Serial.println("Changed gear " + String(configuratingGear) + " position to: " + String(gearPositions[configuratingGear - 1]));
-        bothPressed = false;
-        move(servo, 0);
-      } else {
-        lastAction = true;
-        move(servo, 1);
-      }
-    }
+  }
 
-    // Detect release Downshift
-    if (configuratingGear == 0) {
-      if (shiftDownButton.wasReleased()) {
-        if (shiftDownShort && !shiftDownLong) {
-          move(servo, -2);
-          Serial.println("SHORT DOWN");
-          shiftDownShort = false;
-        } else if (shiftDownLong) {
-          move(servo, -4);
-          Serial.println("LONG DOWN");
-          shiftDownShort = false;
-          shiftDownLong = false;
-        } else {
-          //Serial.println("RELEASED DOWN");
-        }
-        bothPressed = false;
-      } else if (shiftDownButton.pressedFor(SHORT_PRESS) && !shiftDownButton.pressedFor(LONG_PRESS)) {
-        shiftDownShort = true;
-      } else if (shiftDownButton.pressedFor(LONG_PRESS)) {
-        shiftDownLong = true;
-      }
-
-      // Detect release Upshift
-      if (shiftUpButton.wasReleased()) {
-        if (shiftUpShort && !shiftUpLong) {
-          move(servo, 2);
-          Serial.println("SHORT UP");
-          shiftUpShort = false;
-        } else if (shiftUpLong) {
-          move(servo, 4);
-          Serial.println("LONG UP");
-          shiftUpShort = false;
-          shiftUpLong = false;
-        } else {
-          //Serial.println("RELEASED UP");
-        }
-        bothPressed = false;
-      } else if (shiftUpButton.pressedFor(SHORT_PRESS) && !shiftUpButton.pressedFor(LONG_PRESS)) {
-        shiftUpShort = true;
-      } else if (shiftUpButton.pressedFor(LONG_PRESS)) {
-        shiftUpLong = true;
-      }
+  if (shiftDownButton.wasPressed() && !shiftUpButton.isPressed() && !shiftUpButton.wasPressed()) {
+    Serial.println("DOWN");
+    if (configuratingGear) {
+      gearPositions[configuratingGear - 1] = gearPositions[configuratingGear - 1] - 1;
+      Serial.println("Changed gear " + String(configuratingGear) + " position to: " + String(gearPositions[configuratingGear - 1]));
+      move(servo, 0);
+    } else {
+      lastAction = -1;
+      move(servo, -1);
     }
   }
 
+  if (shiftUpButton.wasPressed() && !shiftDownButton.isPressed() && !shiftDownButton.wasPressed()) {
+    //Serial.println("UP");
+    if (configuratingGear) {
+      gearPositions[configuratingGear - 1] = gearPositions[configuratingGear - 1] + 1;
+      Serial.println("Changed gear " + String(configuratingGear) + " position to: " + String(gearPositions[configuratingGear - 1]));
+      move(servo, 0);
+    } else {
+      lastAction = 1;
+      move(servo, 1);
+    }
+  }
+
+  // Detect release Downshift
+  if (configuratingGear == 0) {
+    if (shiftDownButton.wasReleased()) {
+      if (shiftDownShort && !shiftDownLong) {
+        move(servo, -2);
+        Serial.println("SHORT DOWN");
+        shiftDownShort = false;
+      } else if (shiftDownLong) {
+        move(servo, -4);
+        Serial.println("LONG DOWN");
+        shiftDownShort = false;
+        shiftDownLong = false;
+      } else {
+        //Serial.println("RELEASED DOWN");
+      }
+    } else if (shiftDownButton.pressedFor(SHORT_PRESS) && !shiftDownButton.pressedFor(LONG_PRESS)) {
+      shiftDownShort = true;
+    } else if (shiftDownButton.pressedFor(LONG_PRESS)) {
+      shiftDownLong = true;
+    }
+
+    // Detect release Upshift
+    if (shiftUpButton.wasReleased()) {
+      if (shiftUpShort && !shiftUpLong) {
+        move(servo, 2);
+        Serial.println("SHORT UP");
+        shiftUpShort = false;
+      } else if (shiftUpLong) {
+        move(servo, 4);
+        Serial.println("LONG UP");
+        shiftUpShort = false;
+        shiftUpLong = false;
+      } else {
+        //Serial.println("RELEASED UP");
+      }
+    } else if (shiftUpButton.pressedFor(SHORT_PRESS) && !shiftUpButton.pressedFor(LONG_PRESS)) {
+      shiftUpShort = true;
+    } else if (shiftUpButton.pressedFor(LONG_PRESS)) {
+      shiftUpLong = true;
+    }
+  }
+  //Valid range is from 1 to 9
+  if (currentGear >= 1 && currentGear <= gearCount) {
+    if (configuratingGear == 0 && millis() > lastdisplay + 3500 ) {
+      sevenSegment.clean();
+    }else {
+        if (currentGear < 10) {
+    sevenSegment.setNumber(currentGear);
+  } else {
+    sevenSegment.setCharacter(hex[currentGear -1]);
+  }
+    }
+  }  
+
+
 }
 
-void move(Servo servo, int gear) {
-  currentGear = currentGear + gear;
+void move(Servo servo, int amount) {
+  currentGear = currentGear + amount;
   if (currentGear < 1) currentGear = 1;
   if (currentGear > gearCount) currentGear = gearCount;
   if (position != gearPositions[currentGear - 1]) {
     position = gearPositions[currentGear - 1];
+    Serial.println("goto: " + String(position) + ", gear: " + hex[currentGear -1]);
     servo.write(position);
-    Serial.println("goto: " + String(position)  + ", gear: " + hex[currentGear]);
-    flag = 0;
+    delay(15); // waits 15ms for the servo to reach the position
   }
   lastdisplay = millis();
 }

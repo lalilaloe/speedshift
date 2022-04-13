@@ -13,6 +13,7 @@ An universal aproach to electronic shifting with off the shelf components.
 ## Future Goals
 
 - Documenting Instructions/variations in mounting and testing/troubleshooting
+- A web interface for configuration adjustments, on wifi boards
 - A Configurator setting up gears, front and rear deraileur and flashing firmware
 - Support for front deraileur
 - Update Schematics
@@ -24,9 +25,12 @@ An universal aproach to electronic shifting with off the shelf components.
 
 1. A target device (Currently available targets):
    - Arduino UNO
+   - Arduino NANO
+   - Wemos D1 mini pro (recomended)
 1. A servo (waterproof recomended)
-1. A set of buttons (waterproof recomended), Wires and (10k) resistors
-1. (Optional) a 7 segment display
+1. A set of buttons (waterproof recomended)
+1. Wires, a 120 ohm resistor and 3 resistors with same ohm number for buttons
+1. A 7 segment display
 1. A Li-ion battery providing 5V (with a regulator)
 1. Mounting for servo, arduino and buttons (ductape will do 👌)
 1. Arduino IDE to flash SpeedShift
