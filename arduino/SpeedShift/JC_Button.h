@@ -20,8 +20,9 @@ class Button
         // dbTime   Debounce time in milliseconds (default 25ms)
         // puEnable true to enable the AVR internal pullup resistor (default true)
         // invert   true to interpret a low logic level as pressed (default true)
-        Button(uint8_t pin, uint32_t dbTime=25, uint8_t puEnable=true, uint8_t invert=true)
-            : m_pin(pin), m_dbTime(dbTime), m_puEnable(puEnable), m_invert(invert) {}
+        // value    analog pin value, checked within range value of 16 (default 0)
+        Button(uint8_t pin, uint32_t dbTime=25, uint8_t puEnable=true, uint8_t invert=true, uint32_t value=0)
+            : m_pin(pin),  m_dbTime(dbTime), m_puEnable(puEnable), m_invert(invert), m_value(value) {}
 
         // Initialize a Button object and the pin it's connected to
         void begin();
@@ -30,6 +31,8 @@ class Button
         // false for released. Call this function frequently to ensure
         // the sketch is responsive to user input.
         bool read();
+
+        bool inRange(uint32_t val, uint32_t minimum, uint32_t maximum);
 
         // Returns true if the button state was pressed at the last call to read().
         // Does not cause the button to be read.
@@ -61,6 +64,7 @@ class Button
 
     private:
         uint8_t m_pin;          // arduino pin number connected to button
+        uint32_t m_value;       // analog readout value
         uint32_t m_dbTime;      // debounce time (ms)
         bool m_puEnable;        // internal pullup resistor enabled
         bool m_invert;          // if true, interpret logic low as pressed, else interpret logic high as pressed
