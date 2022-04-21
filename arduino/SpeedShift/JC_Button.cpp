@@ -12,7 +12,7 @@ void Button::begin()
 {
     pinMode(m_pin, m_puEnable ? INPUT_PULLUP : INPUT);
     if(m_value){
-      m_state = inRange(analogRead(m_pin), m_value + 8, m_value - 8);
+      m_state = inRange(analogRead(m_pin), m_value + 64, m_value - 64);
     } else {
       m_state = digitalRead(m_pin);
     }
@@ -32,7 +32,7 @@ bool Button::read()
     uint32_t ms = millis();
     bool pinVal;;
     if(m_value){
-      pinVal = inRange(analogRead(m_pin), m_value - 8, m_value + 8);
+      pinVal = inRange(analogRead(m_pin), m_value - 64, m_value + 64);
     } else {
       pinVal = digitalRead(m_pin);
     }
